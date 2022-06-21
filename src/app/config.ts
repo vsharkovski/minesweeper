@@ -1,5 +1,5 @@
 export interface Config {
-    boardRows: number;
-    boardColumns: number;
-    bombsTotal: number;
+    rows: number;
+    columns: number;
+    bombs: number;
 }

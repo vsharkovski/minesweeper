@@ -3,6 +3,7 @@
   --columns: 20;
   width: 400px;
   height: 400px;
+  margin: auto;
   display: grid;
   justify-items: stretch;
   align-items: stretch;
@@ -14,6 +15,13 @@
   /* width: 100%;
   height: 100%; */
   font-size: 20px;
+  font-family: "Courier New", Courier, monospace;
   text-align: center;
+  padding: 10px; /* from top */
   border: 2px solid grey;
+  background-color: lightgray;
+}
+
+.cell.revealed {
+  background-color: white;
 }

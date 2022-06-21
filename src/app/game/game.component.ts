@@ -12,6 +12,7 @@ import { State } from '../state';
 export class GameComponent implements OnInit {
     state!: State;
     cells: Cell[] = [];
+    debugging = false;
 
     constructor(private gameService: GameService) {}
 
@@ -37,7 +38,7 @@ export class GameComponent implements OnInit {
     }
 
     getCellSymbol(cell: Cell): string {
-        if (cell.revealed) {
+        if (cell.revealed || this.debugging) {
             if (cell.bomb) {
                 return 'X';
             } else if (cell.adjacentBombs == 0) {
@@ -54,7 +55,16 @@ export class GameComponent implements OnInit {
         }
     }
 
-    onClick(row: number, column: number, isLeft: boolean): void {
-        this.gameService.click(row, column, isLeft);
+    onLeftClick(cell: Cell): void {
+        this.gameService.click(cell.position.r, cell.position.c, true);
+    }
+
+    onRightClick(cell: Cell): void {
+        this.gameService.click(cell.position.r, cell.position.c, false);
+    }
+
+    toggleDebug(): void {
+        this.debugging = !this.debugging;
+        console.log('Debugging now:', this.debugging);
     }
 }
