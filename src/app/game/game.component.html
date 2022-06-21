@@ -1,0 +1,27 @@
+<div id="menu">
+  <button type="button" (click)="start()">Start</button> <br />
+  <span>Bombs: </span> {{ state.bombsTotal - state.bombsRemaining }} /
+  {{ state.bombsTotal }}
+</div>
+<div
+  *ngIf="state.board"
+  id="board"
+  [style.--rows]="this.state.boardRows"
+  [style.--columns]="this.state.boardColumns"
+>
+  <!--
+  <div *ngFor="let row of state.board; let i = index">
+    <div *ngFor="let cell of row; let j = index">
+      ({{ i * this.state.boardRows + j }})
+    </div>
+  </div>
+  -->
+  <div
+    *ngFor="let cell of cells; let i = index"
+    class="cell"
+    (click)="onClick(cell.position.r, cell.position.c, true)"
+    (contextmenu)="onClick(cell.position.r, cell.position.c, false)"
+  >
+    <span class="symbol">{{ getCellSymbol(cell) }}</span>
+  </div>
+</div>
