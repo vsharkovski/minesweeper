@@ -1,31 +1,39 @@
 #game {
   height: 700px;
   width: 600px;
+  /* height: 80vmin;
+  width: 80vmin; */
   margin: auto;
   display: grid;
   grid-template-rows: 100px auto;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
 }
 
-#game div {
+div {
   text-align: center;
 }
 
-#game #status {
+#menu {
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+#status {
   margin: auto;
   font-size: 20px;
 }
 
-#game #play-control {
+#play-control {
   margin: auto;
 }
 
-#game #play-control button {
+#play-control button {
   font-size: 20px;
   padding: 10px;
 }
 
-#game #timer {
+#timer {
   margin: auto;
   font-size: 20px;
 }
