@@ -20,6 +20,11 @@
   margin: auto;
 }
 
+#game #play-control button {
+  font-size: 20px;
+  padding: 10px;
+}
+
 #game #timer {
   margin: auto;
   font-size: 20px;
@@ -54,8 +59,9 @@
 }
 
 .cell img {
-  max-width: 100%;
-  height: 100%;
+  max-width: 80%;
+  height: 80%;
+  margin: auto; /* center it */
 }
 
 .cell span {
