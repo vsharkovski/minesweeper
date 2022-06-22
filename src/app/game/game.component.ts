@@ -28,7 +28,6 @@ export class GameComponent implements OnInit {
         this.gameService
             .getState()
             .subscribe((newState) => this.processState(newState));
-        this.gameService.getTimer().subscribe();
     }
 
     getTimer(): void {
