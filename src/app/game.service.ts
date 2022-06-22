@@ -138,6 +138,17 @@ export class GameService {
         } else {
             this.state.status = Status.Loss;
         }
+        // Reveal all bomb cells
+        for (let r = 0; r < this.state.rows; r++) {
+            for (let c = 0; c < this.state.columns; c++) {
+                const cell: Cell = this.state.board[r][c];
+                if (cell.bomb) {
+                    cell.revealed = true;
+                }
+            }
+        }
+        // Emit final end state
+        this.stateEmitter.next({ ...this.state });
     }
 
     /**
