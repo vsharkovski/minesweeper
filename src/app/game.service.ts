@@ -1,6 +1,12 @@
-import { NumberFormatStyle } from '@angular/common';
 import { Injectable } from '@angular/core';
-import { Subject, of, endWith, config } from 'rxjs';
+import {
+    Subject,
+    interval,
+    Observable,
+    timer,
+    takeUntil,
+    repeatWhen,
+} from 'rxjs';
 import { Config } from './config';
 import { Cell } from './cell';
 import { State, Status } from './state';
@@ -11,14 +17,27 @@ import { Position } from 'src/position';
 })
 export class GameService {
     private state!: State;
-    private state$!: Subject<State>;
+    private stateEmitter!: Subject<State>;
+
+    private timer$!: Observable<number>;
+    private readonly _stopTimer = new Subject<void>();
+    private readonly _startTimer = new Subject<void>(); // https://stackoverflow.com/questions/55716687/how-to-restart-rxjs-interval
 
     constructor() {
         this.state = this.getPlaceholderState();
-        this.state$ = new Subject<State>(); // We will emit new state from here whenever we finish updating things
-        this.state$.next(this.state);
+        this.stateEmitter = new Subject<State>(); // We will emit new state from here whenever we finish updating things
+        // this.stateEmitter.next(this.state);
+
+        // A timer that starts from 0 when _startTimer emits, and stops when _stopTimer emits
+        this.timer$ = timer(0, 1000).pipe(
+            takeUntil(this._stopTimer),
+            repeatWhen(() => this._startTimer)
+        );
+        // Subscribe to constantly update the current state's elapsedTime
+        this.timer$.subscribe((newTime) => (this.state.elapsedTime = newTime));
     }
 
+    /** Get a placeholder state. */
     getPlaceholderState(): State {
         // This whole thing seems wrong. It would feel better if the component subscribed to state$ once
         // and immediately got a default value, but that didn't work.
@@ -36,16 +55,24 @@ export class GameService {
 
     /** Get an Observable to the current game state. */
     getState(): Subject<State> {
-        return this.state$;
+        return this.stateEmitter;
+    }
+
+    /** Get an Observable to the playing timer, which updates every second. */
+    getTimer(): Observable<number> {
+        return this.timer$;
     }
 
     /** Start the game. */
     start(): void {
+        // Stop the timer
+        this._stopTimer.next();
+        // may make the config dynamic (passed to this function) later
         const config: Config = {
             rows: 9,
             columns: 9,
             bombs: 10,
-        }; // may make dynamic (passed to this function) later
+        };
         // Initialize new state
         this.state = {
             status: Status.Playing,
@@ -58,7 +85,9 @@ export class GameService {
             board: this.createBoard(config),
         };
         // Emit updated state
-        this.state$.next({ ...this.state });
+        this.stateEmitter.next({ ...this.state });
+        // Start the timer
+        this._startTimer.next();
     }
 
     /** Process a left or right click at a certain row and column. */
@@ -95,12 +124,15 @@ export class GameService {
             }
         }
         // Emit the updated state
-        this.state$.next({ ...this.state });
+        this.stateEmitter.next({ ...this.state });
     }
 
     /** Register the end of the game. */
     private end(victory: boolean): void {
-        console.log('GameService ending');
+        console.log('GameService ending', victory ? 'won' : 'lost');
+        // Stop the timer
+        this._stopTimer.next();
+        // Update status
         if (victory) {
             this.state.status = Status.Victory;
         } else {
