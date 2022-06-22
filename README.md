@@ -1,5 +1,11 @@
 # Minesweeper
 
+The classic Minesweeper game, created in Angular.
+
+I wanted to follow the philosophy that components should not do any logic except render data that they get from other places (services). That is why the GameComponent only displays data from GameService. GameService has an object *State* that contains all the information of the current play session; the service sends a notification when the *State* has been updated and should displayed on the screen again. GameService also has a *timer* that updates every second. The GameComponent subscribes to both of those things, and gets a copy of the *State* when it is updated. When some action from the user happens, GameComponent tells GameService, and GameService updates the *State*.
+
+# How to run
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.0.2.
 
 ## Development server
