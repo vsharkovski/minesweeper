@@ -1,22 +1,41 @@
-<div id="menu">
-  <button type="button" (click)="toggleDebug()">Toggle Debug</button> <br />
-  <button type="button" (click)="start()">Start</button> <br />
-  <span>Bombs To Guess: </span> {{ state.bombs - state.flags }}
-</div>
-<div
-  *ngIf="state.board"
-  id="board"
-  [style.--rows]="this.state.rows"
-  [style.--columns]="this.state.columns"
->
+<!-- <button type="button" (click)="toggleDebug()">Toggle Debug</button> -->
+<div id="game">
+  <div id="status">
+    <div *ngIf="statusString === 'NotStarted'">Game Not Started</div>
+    <div *ngIf="statusString === 'Playing'">
+      <span>Bombs remaining: </span> <br />
+      <span>{{ state.bombs - state.flags }}</span>
+    </div>
+    <div *ngIf="statusString === 'Victory'">You won!</div>
+    <div *ngIf="statusString === 'Loss'">You lost :(</div>
+  </div>
+  <div id="play-control">
+    <button type="button" (click)="start()">New Game</button>
+  </div>
+  <div id="timer">
+    <div *ngIf="statusString === 'NotStarted'">Game Not Started</div>
+    <div *ngIf="statusString !== 'NotStarted'">
+      <span>Time: </span> <br />
+      <span>{{ time }} seconds</span>
+    </div>
+  </div>
   <div
-    *ngFor="let cell of cells; let i = index"
-    class="cell"
-    [class.revealed]="cell.revealed"
-    (click)="onLeftClick(cell)"
-    (contextmenu)="onRightClick(cell)"
-    oncontextmenu="return false;"
+    *ngIf="state.board"
+    id="board"
+    [style.--rows]="state.rows"
+    [style.--columns]="state.columns"
   >
-    <span class="symbol">{{ getCellSymbol(cell) }}</span>
+    <div
+      *ngFor="let cell of cells"
+      class="cell"
+      [class.revealed]="cell.revealed"
+      [ngStyle]="{ color: getColor(cell) }"
+      (click)="onLeftClick(cell)"
+      (contextmenu)="onRightClick(cell)"
+      oncontextmenu="return false;"
+    >
+      <img *ngIf="getCellImage(cell) !== ''" [src]="getCellImage(cell)" />
+      <span *ngIf="getCellImage(cell) === ''">{{ getCellSymbol(cell) }}</span>
+    </div>
   </div>
 </div>
