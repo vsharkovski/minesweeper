@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {
     Subject,
-    interval,
+    BehaviorSubject,
     Observable,
     timer,
     takeUntil,
@@ -16,58 +16,44 @@ import { Position } from 'src/position';
     providedIn: 'root',
 })
 export class GameService {
-    private state!: State;
-    private stateEmitter!: Subject<State>;
+    // Whenever we update state, we emit it from stateSource
+    // Always emit a copy so any subscribers can't modify it
+    private state = this.getPlaceholderState();
+    private stateSource = new BehaviorSubject<State>({ ...this.state });
 
+    // A timer that updates every second
+    // Idea from: https://stackoverflow.com/questions/55716687/how-to-restart-rxjs-interval
     private timer$!: Observable<number>;
     private readonly _stopTimer = new Subject<void>();
-    private readonly _startTimer = new Subject<void>(); // https://stackoverflow.com/questions/55716687/how-to-restart-rxjs-interval
+    private readonly _startTimer = new Subject<void>();
 
     constructor() {
-        this.state = this.getPlaceholderState();
-        this.stateEmitter = new Subject<State>(); // We will emit new state from here whenever we finish updating things
-        // this.stateEmitter.next(this.state);
-
         // A timer that starts from 0 when _startTimer emits, and stops when _stopTimer emits
         this.timer$ = timer(0, 1000).pipe(
-            takeUntil(this._stopTimer),
-            repeatWhen(() => this._startTimer)
+            takeUntil(this._stopTimer), // Keep emitting values until _stopTimer emits
+            repeatWhen(() => this._startTimer) // Start emitting values when _startTimer emits
         );
         // Subscribe to constantly update the current state's elapsedTime
         this.timer$.subscribe((newTime) => (this.state.elapsedTime = newTime));
     }
 
-    /** Get a placeholder state. */
-    getPlaceholderState(): State {
-        // This whole thing seems wrong. It would feel better if the component subscribed to state$ once
-        // and immediately got a default value, but that didn't work.
-        return {
-            status: Status.NotStarted,
-            rows: 0,
-            columns: 0,
-            bombs: 0,
-            flags: 0,
-            cellsRevealed: 0,
-            elapsedTime: 0,
-            board: [],
-        };
-    }
-
     /** Get an Observable to the current game state. */
-    getState(): Subject<State> {
-        return this.stateEmitter;
+    getState(): Observable<State> {
+        // Should I instead make an observable once and return it always?
+        // Does it affect anything if there are multiple subscribers?
+        return this.stateSource.asObservable();
     }
 
-    /** Get an Observable to the playing timer, which updates every second. */
+    /** Get an Observable to the playing timer. */
     getTimer(): Observable<number> {
         return this.timer$;
     }
 
-    /** Start the game. */
+    /** Start the game by setting up the state, starting the timer, and emitting the state. */
     start(): void {
-        // Stop the timer
+        // Stop the timer, if started
         this._stopTimer.next();
-        // may make the config dynamic (passed to this function) later
+        // May make the config dynamic (passed to this function) later
         const config: Config = {
             rows: 9,
             columns: 9,
@@ -85,7 +71,7 @@ export class GameService {
             board: this.createBoard(config),
         };
         // Emit updated state
-        this.stateEmitter.next({ ...this.state });
+        this.stateSource.next({ ...this.state });
         // Start the timer
         this._startTimer.next();
     }
@@ -122,9 +108,24 @@ export class GameService {
                     this.state.flags += 1;
                 }
             }
+            // Emit the updated state
+            this.stateSource.next({ ...this.state });
         }
-        // Emit the updated state
-        this.stateEmitter.next({ ...this.state });
+        // If not playing, don't do anything.
+    }
+
+    /** Get a placeholder state, where the game hasn't started. */
+    private getPlaceholderState(): State {
+        return {
+            status: Status.NotStarted,
+            rows: 0,
+            columns: 0,
+            bombs: 0,
+            flags: 0,
+            cellsRevealed: 0,
+            elapsedTime: 0,
+            board: [],
+        };
     }
 
     /** Register the end of the game. */
@@ -148,7 +149,7 @@ export class GameService {
             }
         }
         // Emit final end state
-        this.stateEmitter.next({ ...this.state });
+        this.stateSource.next({ ...this.state });
     }
 
     /**
@@ -171,8 +172,8 @@ export class GameService {
                 for (let c = top.position.c - 1; c <= top.position.c + 1; ++c) {
                     // prettier-ignore
                     if (
-                        r >= 0 && r < this.state.rows &&
-                        c >= 0 && c < this.state.columns &&
+                        r >= 0 && r < state.rows &&
+                        c >= 0 && c < state.columns &&
                         !state.board[r][c].revealed &&
                         !state.board[r][c].bomb
                     ) {
