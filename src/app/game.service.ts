@@ -23,6 +23,8 @@ export class GameService {
 
     // A timer that updates every second
     // Idea from: https://stackoverflow.com/questions/55716687/how-to-restart-rxjs-interval
+    // repeatWhen is deprecated, but I couldn't figure out how to use the suggested `repeat`
+    // See https://rxjs.dev/api/operators/repeat
     private timer$!: Observable<number>;
     private readonly _stopTimer = new Subject<void>();
     private readonly _startTimer = new Subject<void>();
