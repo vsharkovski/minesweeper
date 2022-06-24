@@ -1,16 +1,16 @@
+import { Cell } from './cell';
+import { Config } from './config';
 import { Injectable } from '@angular/core';
+import { Position } from 'src/position';
+import { State, Status } from './state';
 import {
-    Subject,
     BehaviorSubject,
+    Subject,
+    switchMap,
     Observable,
     timer,
     takeUntil,
-    repeatWhen,
 } from 'rxjs';
-import { Config } from './config';
-import { Cell } from './cell';
-import { State, Status } from './state';
-import { Position } from 'src/position';
 
 @Injectable({
     providedIn: 'root',
@@ -21,20 +21,18 @@ export class GameService {
     private state = this.getPlaceholderState();
     private stateSource = new BehaviorSubject<State>({ ...this.state });
 
-    // A timer that updates every second
-    // Idea from: https://stackoverflow.com/questions/55716687/how-to-restart-rxjs-interval
-    // repeatWhen is deprecated, but I couldn't figure out how to use the suggested `repeat`
-    // See https://rxjs.dev/api/operators/repeat
-    private timer$!: Observable<number>;
-    private readonly _stopTimer = new Subject<void>();
-    private readonly _startTimer = new Subject<void>();
+    // A timer that starts when startTimer emits.
+    // The timer starts from 0 and increments every 1 second (1000 ms).
+    // The timer stops when stopTimer emits.
+    private startTimer = new Subject<void>();
+    private stopTimer = new Subject<void>();
+    private timer$ = this.startTimer.pipe(
+        switchMap(() => {
+            return timer(0, 1000).pipe(takeUntil(this.stopTimer));
+        })
+    );
 
     constructor() {
-        // A timer that starts from 0 when _startTimer emits, and stops when _stopTimer emits
-        this.timer$ = timer(0, 1000).pipe(
-            takeUntil(this._stopTimer), // Keep emitting values until _stopTimer emits
-            repeatWhen(() => this._startTimer) // Start emitting values when _startTimer emits
-        );
         // Subscribe to constantly update the current state's elapsedTime
         this.timer$.subscribe((newTime) => (this.state.elapsedTime = newTime));
     }
@@ -42,7 +40,7 @@ export class GameService {
     /** Get an Observable to the current game state. */
     getState(): Observable<State> {
         // Should I instead make an observable once and return it always?
-        // Does it affect anything if there are multiple subscribers?
+        // Does it affect anything in a case where there are multiple subscribers?
         return this.stateSource.asObservable();
     }
 
@@ -53,8 +51,8 @@ export class GameService {
 
     /** Start the game by setting up the state, starting the timer, and emitting the state. */
     start(): void {
-        // Stop the timer, if started
-        this._stopTimer.next();
+        // Stop the timer
+        this.stopTimer.next();
         // May make the config dynamic (passed to this function) later
         const config: Config = {
             rows: 9,
@@ -75,7 +73,7 @@ export class GameService {
         // Emit updated state
         this.stateSource.next({ ...this.state });
         // Start the timer
-        this._startTimer.next();
+        this.startTimer.next();
     }
 
     /** Process a left or right click at a certain row and column. */
@@ -134,7 +132,7 @@ export class GameService {
     private end(victory: boolean): void {
         console.log('GameService ending', victory ? 'won' : 'lost');
         // Stop the timer
-        this._stopTimer.next();
+        this.stopTimer.next();
         // Update status
         if (victory) {
             this.state.status = Status.Victory;
