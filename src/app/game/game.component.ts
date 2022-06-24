@@ -24,7 +24,6 @@ export class GameComponent implements OnInit {
     }
 
     getState(): void {
-        this.processState(this.gameService.getPlaceholderState());
         this.gameService
             .getState()
             .subscribe((newState) => this.processState(newState));
@@ -43,7 +42,7 @@ export class GameComponent implements OnInit {
         this.statusString = Status[state.status]; // convert enum value to its key
     }
 
-    start(): void {
+    onStart(): void {
         this.gameService.start();
     }
 
@@ -89,11 +88,11 @@ export class GameComponent implements OnInit {
         return '#000';
     }
 
-    onLeftClick(cell: Cell): void {
+    onCellLeftClick(cell: Cell): void {
         this.gameService.click(cell.position.r, cell.position.c, true);
     }
 
-    onRightClick(cell: Cell): void {
+    onCellRightClick(cell: Cell): void {
         this.gameService.click(cell.position.r, cell.position.c, false);
     }
 

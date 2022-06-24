@@ -11,7 +11,7 @@
       <div *ngIf="statusString === 'Loss'">You lost :(</div>
     </div>
     <div id="play-control">
-      <button type="button" (click)="start()">New Game</button>
+      <button type="button" (click)="onStart()">New Game</button>
     </div>
     <div id="timer">
       <div *ngIf="statusString === 'NotStarted'">Game Not Started</div>
@@ -32,8 +32,8 @@
       class="cell"
       [class.revealed]="cell.revealed"
       [ngStyle]="{ color: getColor(cell) }"
-      (click)="onLeftClick(cell)"
-      (contextmenu)="onRightClick(cell)"
+      (click)="onCellLeftClick(cell)"
+      (contextmenu)="onCellRightClick(cell)"
       oncontextmenu="return false;"
     >
       <img *ngIf="getCellImage(cell) !== ''" [src]="getCellImage(cell)" />
