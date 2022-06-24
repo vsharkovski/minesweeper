@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { Cell } from '../cell';
 import { GameService } from '../game.service';
 import { State } from '../state';
@@ -9,12 +10,17 @@ import { Status } from '../state';
     templateUrl: './game.component.html',
     styleUrls: ['./game.component.css'],
 })
-export class GameComponent implements OnInit {
-    state!: State;
-    cells: Cell[] = [];
-    statusString = '';
+export class GameComponent implements OnInit, OnDestroy {
+    state?: State;
     time = 0;
+    statusString = '';
+
     debugging = false;
+
+    // Subscriptions should be stored and unsubscribed on component destroyal
+    // https://angular.io/guide/component-interaction#parent-and-children-communicate-using-a-service
+    stateSubscription?: Subscription;
+    timerSubscription?: Subscription;
 
     constructor(private gameService: GameService) {}
 
@@ -23,14 +29,21 @@ export class GameComponent implements OnInit {
         this.getTimer();
     }
 
+    ngOnDestroy(): void {
+        this.stateSubscription?.unsubscribe();
+        this.timerSubscription?.unsubscribe();
+    }
+
     getState(): void {
-        this.gameService
+        this.stateSubscription?.unsubscribe();
+        this.stateSubscription = this.gameService
             .getState()
             .subscribe((newState) => this.processState(newState));
     }
 
     getTimer(): void {
-        this.gameService
+        this.timerSubscription?.unsubscribe();
+        this.timerSubscription = this.gameService
             .getTimer()
             .subscribe((newTime) => (this.time = newTime));
     }
@@ -38,12 +51,24 @@ export class GameComponent implements OnInit {
     processState(state: State): void {
         console.log('GameComponent processing state', state);
         this.state = state; // {...state}
-        this.cells = state.board.flat();
         this.statusString = Status[state.status]; // convert enum value to its key
     }
 
     onStart(): void {
         this.gameService.start();
+    }
+
+    onCellLeftClick(cell: Cell): void {
+        this.gameService.click(cell.position.r, cell.position.c, true);
+    }
+
+    onCellRightClick(cell: Cell): void {
+        this.gameService.click(cell.position.r, cell.position.c, false);
+    }
+
+    onDebug(): void {
+        this.debugging = !this.debugging;
+        console.log('GameComponent debugging now:', this.debugging);
     }
 
     getCellSymbol(cell: Cell): string {
@@ -86,18 +111,5 @@ export class GameComponent implements OnInit {
             case 8: return '#8400d1';
         }
         return '#000';
-    }
-
-    onCellLeftClick(cell: Cell): void {
-        this.gameService.click(cell.position.r, cell.position.c, true);
-    }
-
-    onCellRightClick(cell: Cell): void {
-        this.gameService.click(cell.position.r, cell.position.c, false);
-    }
-
-    toggleDebug(): void {
-        this.debugging = !this.debugging;
-        console.log('Debugging now:', this.debugging);
     }
 }

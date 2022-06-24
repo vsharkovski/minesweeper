@@ -1,9 +1,9 @@
-<!-- <button type="button" (click)="toggleDebug()">Toggle Debug</button> -->
+<!-- <button type="button" (click)="onDebug()">Toggle Debug</button> -->
 <div id="game">
   <div id="menu">
     <div id="status">
       <div *ngIf="statusString === 'NotStarted'">Game Not Started</div>
-      <div *ngIf="statusString === 'Playing'">
+      <div *ngIf="statusString === 'Playing' && state">
         <span>Bombs remaining: </span> <br />
         <span>{{ state.bombs - state.flags }}</span>
       </div>
@@ -22,13 +22,13 @@
     </div>
   </div>
   <div
-    *ngIf="state.board"
+    *ngIf="state && state.board"
     id="board"
     [style.--rows]="state.rows"
     [style.--columns]="state.columns"
   >
     <div
-      *ngFor="let cell of cells"
+      *ngFor="let cell of state.board.flat()"
       class="cell"
       [class.revealed]="cell.revealed"
       [ngStyle]="{ color: getColor(cell) }"
