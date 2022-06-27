@@ -218,7 +218,9 @@ export class GameService {
                 for (let r1 = r - 1; r1 <= r + 1; ++r1) {
                     for (let c1 = c - 1; c1 <= c + 1; ++c1) {
                         // prettier-ignore
-                        if (r1 >= 0 && r1 < config.rows && c1 >= 0 && c1 < config.columns) {
+                        if (r1 >= 0 && r1 < config.rows
+                            && c1 >= 0 && c1 < config.columns
+                            && (r1 != r || c1 != c)) {
                             board[r1][c1].adjacentBombs += 1;
                         }
                     }
