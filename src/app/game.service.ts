@@ -27,9 +27,7 @@ export class GameService {
     private startTimer = new Subject<void>();
     private stopTimer = new Subject<void>();
     private timer$ = this.startTimer.pipe(
-        switchMap(() => {
-            return timer(0, 1000).pipe(takeUntil(this.stopTimer));
-        })
+        switchMap(() => timer(0, 1000).pipe(takeUntil(this.stopTimer)))
     );
 
     constructor() {
